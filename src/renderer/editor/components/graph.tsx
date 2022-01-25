@@ -16,6 +16,7 @@ import {
 import { Editor } from "../editor";
 
 import { Icon } from "../gui/icon";
+import { InspectorNotifier } from "../gui/inspector/notifier";
 
 import { Tools } from "../tools/tools";
 import { undoRedo } from "../tools/undo-redo";
@@ -79,6 +80,11 @@ interface _ITreeDropInfo {
     dragNodesKeys: (string | number)[];
     dropPosition: number;
     dropToGap: boolean;
+}
+
+export interface _IDragAndDroppedItem {
+    nodeId: string;
+    onDropInInspector: (ev: React.DragEvent<HTMLElement>, object: any, property: string) => Promise<void>;
 }
 
 export class Graph extends React.Component<IGraphProps, IGraphState> {
@@ -896,7 +902,22 @@ export class Graph extends React.Component<IGraphProps, IGraphState> {
             event.dataTransfer?.setData("graph/node", JSON.stringify({
                 nodeId: draggedNodeId,
             }));
+
+            InspectorNotifier._DragAndDroppedGraphItem = this._getDragAndDroppedItemConfiguration(draggedNodeId);
         }
+    }
+
+    /**
+     * Returns the drag'n'dropped item configuration to be used when the user
+     * drags and drops a graph item in an inspector field.
+     */
+    private _getDragAndDroppedItemConfiguration(nodeId): _IDragAndDroppedItem {
+        return {
+            nodeId,
+            onDropInInspector: async (_, object, property) => {
+                object[property] = nodeId;
+            },
+        };
     }
 
     /**
